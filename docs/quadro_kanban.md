@@ -11,25 +11,29 @@
 ## Quadro Kanban
 
 ### Backlog
+- [x] Entrevistas com o público
+- [x] Decisão do material
+- [x] Compra e pedido dos componentes
+- [ ] Montagem do circuito
+- [ ] Programação do circuito
 - [ ] Calibração com APP
 - [ ] Impressão 3D
 - [ ] Teste de bateria
 - [ ] Testes em campo
-- [ ] Entrevistas com o público*
 
 ### To-Do (A Fazer)
-- [ ] Compra dos componentes
+
 - [ ] Montagem do circuito
-- [ ] Código C++ para dB
+- [ ] Programação do circuito
 - [ ] Modelagem 3D do case
-- [ ] Documentação
 
 ### Doing (Em Andamento)
-- [/] Entrevistas com o público
-- [/] Decisão dos componentes
+- [ ] Documentação
 
 ### Done (Concluído)
-- [x] Entrevistas com o público *(riscado/transferido)*
+- [x] Entrevistas com o público
+- [x] Decisão do material
+- [x] Compra e pedido dos componentes
 
 ### Log
 *(Vazio)*
