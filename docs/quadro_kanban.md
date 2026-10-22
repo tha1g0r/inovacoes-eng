@@ -16,19 +16,19 @@
 - [x] Compra e pedido dos componentes
 - [ ] Montagem do circuito
 - [ ] Programação do circuito
+- [ ] Programação do APP
 - [ ] Calibração com APP
 - [ ] Impressão 3D
 - [ ] Teste de bateria
 - [ ] Testes em campo
 
 ### To-Do (A Fazer)
-
-- [ ] Montagem do circuito
-- [ ] Programação do circuito
 - [ ] Modelagem 3D do case
 
 ### Doing (Em Andamento)
 - [ ] Documentação
+- [ ] Montagem do circuito
+- [ ] Programação do circuito
 
 ### Done (Concluído)
 - [x] Entrevistas com o público
