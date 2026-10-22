@@ -42,15 +42,34 @@ Outros ambientes possíveis: hospitais, bibliotecas, salas de estudo.
 
 ```
 [Receptor na porta]  --Wi-Fi-->  [Computador/servidor]  -->  [Painel da portaria]
-  microfone + MCU                 regras, horários,            lista por unidade,
-  (ex.: Arduino/ESP)              histórico, alertas           alertas, histórico
+  ESP32 + INMP441                 regras, horários,            lista por unidade,
+                                  histórico, alertas           alertas, histórico
 ```
 
 **Receptor (por unidade)**
-- Microfone com saída de nível (ex.: módulo de microfone para Arduino) ou microfone analógico + amplificador
-- Microcontrolador com comunicação sem fio (ex.: ESP32, compatível com o ecossistema Arduino)
+- Microcontrolador **ESP32** (Wi-Fi integrado, interface I2S, programável pela Arduino IDE)
+- Microfone MEMS digital **INMP441** (saída I2S)
 - Alimentação via tomada/fonte USB
 - LED indicador de status
+
+### 5.1 Escolha do hardware: ESP32 + INMP441
+
+Boa combinação para o projeto: o INMP441 entrega áudio digital direto ao ESP32 (sem amplificador analógico), e o ESP32 já tem Wi-Fi.
+
+| Ponto | Avaliação |
+|---|---|
+| Sensibilidade/ruído | Piso de ruído em torno de 33 dBA e faixa até ~120 dB SPL: adequado para limites típicos de silêncio (40–55 dB) e para ruídos altos |
+| Processamento local | O ESP32 calcula o nível (RMS em janelas de ~125 ms) e envia só o valor em dB; o áudio nunca sai do chip (ver seção 7) |
+| Custo | Baixo; permite vários receptores dentro do limite de R$ 250,00 |
+| Comunicação | Wi-Fi + MQTT ou HTTP para o computador |
+
+**Cuidados**
+- **Calibração:** o INMP441 mede em dB relativo à escala digital (dBFS). É preciso calibrar um offset para dB SPL, comparando com um decibelímetro ou app de celular (já previsto no Kanban). Cada unidade terá o seu offset.
+- **Ponderação A:** para aproximar o dBA, aplicar um filtro IIR por software.
+- **Resultado não certificado:** serve para alerta e registro interno, não como prova pericial.
+- **Posição do microfone:** na porta, o sensor também capta ruído do corredor; testar o posicionamento e a orientação do furo do microfone.
+- **Disponibilidade:** o INMP441 está em fim de linha em alguns fornecedores; alternativas compatíveis com I2S são o SPH0645, o ICS-43434 e o MSM261S4030H0.
+- **Sincronização:** para comparar o instante dos picos entre receptores (seção 6), sincronizar relógios via NTP; comparar apenas níveis dispensa isso.
 
 **Computador/servidor**
 - Recebe as leituras, aplica regras por horário, dispara alertas e guarda histórico
@@ -92,7 +111,8 @@ Ponto crítico, pois há microfone dentro de residências.
 
 ## 9. Protótipo mínimo (MVP)
 
-- 2 a 3 receptores (microfone + Arduino/ESP) ligados a um computador
+- 2 a 3 receptores (ESP32 + INMP441) ligados a um computador via Wi-Fi
+- Calibração de cada receptor contra um decibelímetro ou app de referência
 - Painel simples (página web ou tela de terminal) com nível por unidade
 - Regra configurável de limite e horário
 - Teste de bancada simulando "apartamentos" em cômodos ou mesas diferentes, para validar a atribuição de origem (H4)
@@ -102,6 +122,7 @@ Restrição do curso: gasto máximo de **R$ 250,00 por grupo** (documentado).
 ## 10. Riscos
 
 - Falsos positivos e falsos negativos na detecção
+- Diferença de sensibilidade entre microfones e erro de calibração (dB SPL)
 - Rejeição por privacidade
 - Custo por unidade em escala real
 - Dependência de rede Wi-Fi dentro do condomínio
