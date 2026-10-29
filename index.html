@@ -46,8 +46,6 @@
   .conexao::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--atencao); }
   .conexao[data-estado="on"]::before { background: var(--calmo); }
   .conexao[data-estado="off"]::before { background: var(--alerta); }
-  .chave { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--texto-2); cursor: pointer; }
-  .chave input { accent-color: var(--calmo); width: 16px; height: 16px; }
   .relogio { font-size: .85rem; color: var(--texto-2); min-width: 64px; text-align: right; }
 
   .resumo {
@@ -81,9 +79,7 @@
   }
   .andar { display: grid; grid-template-columns: 26px repeat(var(--cols), 1fr); gap: 6px; align-items: center; }
   .andar-num { font-size: .72rem; color: var(--texto-2); text-align: right; padding-right: 4px; }
-  .terreo {
-    height: 14px; background: var(--linha); border-radius: 0 0 4px 4px; margin: 0 -8px;
-  }
+  .terreo { height: 14px; background: var(--linha); border-radius: 0 0 4px 4px; margin: 0 -8px; }
   .chao { height: 10px; }
 
   .janela {
@@ -159,7 +155,6 @@
   </div>
   <div class="controles">
     <span class="conexao" id="conexao" data-estado="wait">Conectando…</span>
-    <label class="chave"><input type="checkbox" id="simular" checked> Simular apartamentos sem sensor</label>
     <span class="relogio" id="relogio">--:--:--</span>
   </div>
 </header>
@@ -199,7 +194,7 @@
 <script>
 // ================== CONFIGURAÇÃO ==================
 const CONFIG = {
-  condominio: "UFABC",
+  condominio: "Residencial Jardim",
   blocos: ["A", "B", "C"],
   andares: 6,
   aptosPorAndar: 4,
@@ -244,8 +239,7 @@ function montarFachadas() {
         linha.appendChild(el);
         aptos.set(k, {
           k, bloco, andar, apto, nivel: 0, alarme: false, hist: [], alertas: 0,
-          online: false, tReal: 0, real: false, ultimo: 0, tAbaixo: 0, pico: null,
-          base: 4 + Math.random() * 10, el, elNivel: el.querySelector(".janela-nivel")
+          online: false, tReal: 0, real: false, ultimo: 0, tAbaixo: 0, el, elNivel: el.querySelector(".janela-nivel")
         });
       }
       fachada.appendChild(linha);
@@ -272,7 +266,7 @@ function registrar(a, nivel, agora, alarmeDispositivo) {
   a.nivel = Math.round(Math.max(0, Math.min(100, nivel)));
   a.online = true; a.ultimo = agora;
   a.hist.push(a.nivel); if (a.hist.length > 240) a.hist.shift();   // 60 s
-  if (alarmeDispositivo === undefined) {          // apartamentos simulados: lógica local
+  if (alarmeDispositivo === undefined) {          // fallback: lógica local se o ESP32 não enviar "alarme"
     if (!a.alarme && a.nivel >= CONFIG.limite) {
       a.alarme = true; a.tAbaixo = 0; evento(a, "LIMITE_ULTRAPASSADO", a.nivel, agora);
     } else if (a.alarme) {
@@ -282,7 +276,7 @@ function registrar(a, nivel, agora, alarmeDispositivo) {
       } else a.tAbaixo = 0;
     }
   } else {
-    a.alarme = !!alarmeDispositivo;               // sensor real: estado vem do ESP32
+    a.alarme = !!alarmeDispositivo;               // estado do alarme vem do ESP32
   }
   pintar(a);
 }
@@ -326,7 +320,7 @@ function atualizarDetalhe() {
   $("#d-valor").textContent = a.online ? a.nivel : "–";
   const selo = $("#d-selo"); selo.dataset.estado = e; selo.textContent = rotuloEstado[e];
   $("#d-alertas").textContent = a.alertas;
-  $("#d-fonte").textContent = a.real ? "Sensor ESP32" : (a.online ? "Simulação" : "–");
+  $("#d-fonte").textContent = a.real ? "Sensor ESP32" : "–";
   $("#d-hora").textContent = a.ultimo ? hora(a.ultimo) : "–";
   desenharGrafico(a, e);
 }
@@ -354,19 +348,13 @@ function desenharGrafico(a, e) {
   ctx.fillStyle = g; ctx.fill();
 }
 
-// ---------- Simulação + atualização geral ----------
+// ---------- Atualização geral (somente dados reais do ESP32) ----------
 function tick() {
-  const agora = Date.now(), simular = $("#simular").checked;
+  const agora = Date.now();
   for (const a of aptos.values()) {
     a.real = a.tReal > 0 && agora - a.tReal < CONFIG.sinalExpiraMs;
-    if (a.real) continue;                                // pintado pelas mensagens MQTT
-    if (simular) {
-      if (!a.pico && Math.random() < 0.0006) a.pico = { ate: agora + 1500 + Math.random() * 4000, alvo: 35 + Math.random() * 50 };
-      if (a.pico && agora > a.pico.ate) a.pico = null;
-      const alvo = a.pico ? a.pico.alvo : a.base;
-      registrar(a, a.nivel * 0.55 + alvo * 0.45 + (Math.random() - 0.5) * 6, agora);
-    } else if (a.online) {
-      a.online = false; a.alarme = false; a.pico = null; a.nivel = 0; pintar(a);
+    if (!a.real && a.online) {                           // sensor parou de enviar
+      a.online = false; a.alarme = false; a.nivel = 0; pintar(a);
     }
   }
   // resumo
@@ -409,7 +397,7 @@ function conectarMQTT() {
     if (!a) { console.warn("Apartamento fora da configuração:", topico); return; }
     let d; try { d = JSON.parse(payload.toString()); } catch { return; }
     const agora = Date.now();
-    a.tReal = agora; a.real = true; a.pico = null;
+    a.tReal = agora; a.real = true;
     if (tipo === "nivel") registrar(a, d.nivel, agora, d.alarme);
     else if (tipo === "evento") evento(a, d.evento, d.nivel_pct, agora);
   });
