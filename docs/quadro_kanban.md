@@ -10,25 +10,25 @@
 
 ### Backlog
 
-- [ ] Calibração com APP
-- [ ] Impressão 3D
-- [ ] Teste de alimentação pela tomada (USB)
-- [ ] Testes em campo
 
 ### To-Do (A Fazer)
 
-- [ ] Modelagem 3D do case
+- [ ] Impressão 3D
 
 ### Doing (Em Andamento)
 
-- [ ] Montagem do circuito
-- [ ] Programação do circuito
-- [ ] Programação do APP
 - [ ] Documentação
+- [ ] Teste de alimentação pela tomada (USB)
 
 ### Done (Concluído)
 
 - [x] Compra e pedido dos componentes
+- [x] Montagem do circuito
+- [x] Programação do circuito
+- [x] Programação do APP
+- [x] Modelagem 3D do case
+- [x] Calibração com APP
+- [x] Testes em campo
 
 ### Log
 
